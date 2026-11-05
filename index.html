@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Điểm danh QR</title>
+<style>
+:root{
+  --bg:#f5f6f8;--card:#fff;--ink:#1b1f24;--muted:#6a7380;--line:#e2e5ea;--soft:#eef1f5;
+  --acc:#1f6feb;--acc-ink:#fff;--c:#1a7f37;--c-bg:#dcf5e3;--t:#9a6700;--t-bg:#fff1c7;
+  --p:#6639ba;--p-bg:#ece4fb;--v:#cf222e;--v-bg:#ffe1e1;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1216;--card:#181c22;--ink:#e7eaee;--muted:#9aa3ae;--line:#2a3039;--soft:#20252d;
+  --acc:#4c8dff;--c:#56d37a;--c-bg:#153a22;--t:#f0c050;--t-bg:#3a2f10;--p:#b693ff;--p-bg:#2c2147;--v:#ff7b7b;--v-bg:#401a1c;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:24px;margin:8px 0}h2{font-size:20px;margin:0 0 8px}h3{font-size:16px;margin:16px 0 8px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--line)}
+.brand{font-weight:700}
+.muted{color:var(--muted)}.small{font-size:13px}
+.err{color:var(--v);font-weight:600}
+.row{display:flex;gap:8px;align-items:center}.between{justify-content:space-between}.end{justify-content:flex-end}.wrap{flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.center{text-align:center}.narrow{max-width:440px;margin:40px auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.cls{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;cursor:pointer;color:var(--ink);font:inherit}
+.cls:hover{border-color:var(--acc)}
+.empty{padding:32px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+button{font:inherit;border:0;border-radius:10px;padding:10px 16px;background:var(--acc);color:var(--acc-ink);cursor:pointer;font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{background:var(--soft);color:var(--ink)}
+button.sm{padding:6px 12px;font-size:14px}
+button.danger{color:var(--v)}
+input,select,textarea{font:inherit;width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+textarea{font-family:ui-monospace,Consolas,monospace;font-size:13px}
+label{display:block;font-weight:600;font-size:14px;margin:10px 0}
+label input,label select,label textarea{margin-top:4px;font-weight:400}
+.form .cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0 14px}
+.tabs{display:flex;gap:6px;margin:14px 0;border-bottom:1px solid var(--line)}
+.tabs button{background:none;color:var(--muted);border-radius:0;border-bottom:3px solid transparent;padding:8px 12px}
+.tabs button.on{color:var(--ink);border-color:var(--acc)}
+.list{display:flex;flex-direction:column;gap:6px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.item .muted{font-size:13px}
+.item select{width:auto;padding:4px 8px;font-size:13px}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;margin-left:6px}
+.tag.c{color:var(--c);background:var(--c-bg)}.tag.t{color:var(--t);background:var(--t-bg)}
+.tag.p{color:var(--p);background:var(--p-bg)}.tag.v{color:var(--v);background:var(--v-bg)}
+.sess-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;margin-top:12px}
+@media (max-width:820px){.sess-grid{grid-template-columns:1fr}}
+.qrbox{text-align:center}
+#qrwrap{position:relative;background:#fff;border-radius:12px;padding:8px;max-width:520px;margin:0 auto}
+#qr{width:100%;height:auto;image-rendering:pixelated;display:block}
+.closed{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.93);color:#cf222e;font-size:24px;font-weight:700;border-radius:12px}
+.hidden{display:none!important}
+.bar{height:6px;background:var(--soft);border-radius:99px;overflow:hidden;max-width:520px;margin:10px auto 4px}
+.bar i{display:block;height:100%;background:var(--acc);width:100%}
+@keyframes drain{from{width:100%}to{width:0}}
+.big{font-size:20px;margin-top:6px}.big b{font-size:48px;color:var(--c)}
+body.present .side{display:none}
+body.present .sess-grid{grid-template-columns:1fr}
+body.present #qrwrap{max-width:min(78vh,92vw)}
+body.present .bar{max-width:min(78vh,92vw)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{background:var(--soft);position:sticky;top:0}
+td.name,th.name{text-align:left;position:sticky;left:0;background:var(--card)}
+th.name{background:var(--soft)}
+td.k-C{color:var(--c);font-weight:700}td.k-T{color:var(--t);background:var(--t-bg);font-weight:700}
+td.k-P{color:var(--p);background:var(--p-bg);font-weight:700}td.k-V{color:var(--v);background:var(--v-bg);font-weight:700}
+tr.warn td.name{color:var(--v);font-weight:700}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:10px 0}
+.note{background:var(--t-bg);color:var(--t);padding:10px 12px;border-radius:10px;margin-top:12px;font-size:14px}
+/* student page */
+.stu{max-width:420px;margin:32px auto;padding:0 16px}
+.stu input{font-size:22px;text-align:center;letter-spacing:1px;padding:14px}
+.stu button{width:100%;font-size:18px;padding:14px;margin-top:12px}
+.match{min-height:28px;margin-top:10px;font-weight:700;font-size:17px}
+.ok{font-size:64px;color:var(--c);line-height:1}
+.setup ol li{margin:6px 0}
+code{background:var(--soft);padding:1px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ============ CẤU HÌNH — THẦY CHỈ CẦN SỬA 2 CHỖ NÀY ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCAfLudsIG9CJPar67ZXoxv-TIBTqrzu1A",
+  authDomain: "phong-thi-97252.firebaseapp.com",
+  projectId: "phong-thi-97252",
+  storageBucket: "phong-thi-97252.firebasestorage.app",
+  messagingSenderId: "943933218707",
+  appId: "1:943933218707:web:36732ad76aec1d4086d266"
+};
+const TEACHER_EMAIL = "bn.nguyenbinhnguyen@gmail.com";   // email Google dùng để đăng nhập giáo viên
+/* ================================================================ */
+
+const ROTATE_SEC = 10;    // mã QR đổi mỗi 10 giây
+const KEEP_TOKENS = 12;   // mã cũ còn hiệu lực ~2 phút (để SV kịp nhập MSSV)
+
+let db, auth, FV;
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const params = new URLSearchParams(location.search);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rnd = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), x => 'abcdefghjkmnpqrstuvwxyz23456789'[x % 31]).join('');
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const norm = s => String(s || '').trim().toUpperCase().replace(/\s+/g, '');
+const tsMs = t => t ? (t.toMillis ? t.toMillis() : +t) : 0;
+const fmtTime = ms => ms ? new Date(ms).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '';
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const fmtDate = s => s ? s.split('-').reverse().join('/') : '';
+const numVN = x => (+x).toLocaleString('vi-VN', {maximumFractionDigits: 2});
+const ST = {C:'Có mặt', T:'Trễ', P:'Có phép', V:'Vắng'};
+const withTimeout = (p, ms = 15000) => Promise.race([p, new Promise((_, r) => setTimeout(() => r({code:'timeout'}), ms))]);
+
+const classRef = cid => db.collection('attClasses').doc(cid);
+const sessCol = cid => classRef(cid).collection('sessions');
+const checkCol = (cid, sid) => sessCol(cid).doc(sid).collection('checkins');
+
+let cleanup = [];
+function go(fn, ...a) { cleanup.forEach(f => { try { f(); } catch (e) {} }); cleanup = []; document.body.classList.remove('present'); window.scrollTo(0, 0); fn(...a); }
+function render(html, {bar = true} = {}) {
+  app.innerHTML = (bar ? `<header class="top"><div class="brand">📋 Điểm danh QR</div>${auth && auth.currentUser ? `<button class="ghost sm" id="signout">Đăng xuất</button>` : ''}</header>` : '') + `<main>${html}</main>`;
+  const so = $('#signout'); if (so) so.onclick = () => auth.signOut();
+}
+function showErr(e) { console.error(e); alert('Lỗi: ' + (e && (e.message || e.code) || e)); }
+const opt = (arr, cur) => arr.map(([v, t]) => `<option value="${v}" ${+v === +cur ? 'selected' : ''}>${t}</option>`).join('');
+
+function statusOf(c, startMs, lateMin) {
+  if (!c) return 'V';
+  if (c.status) return c.status;
+  const t = tsMs(c.time);
+  return (startMs && t > startMs + (lateMin || 0) * 60000) ? 'T' : 'C';
+}
+
+/* Đọc danh sách dán từ Excel: mỗi dòng có MSSV (≥4 chữ số) và họ tên; bỏ qua cột STT, dòng tiêu đề */
+function parseStudents(text) {
+  const list = [], skipped = [], seen = new Set();
+  const isId = x => /^[A-Za-z0-9.\-_]+$/.test(x) && x.replace(/\D/g, '').length >= 4;
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim(); if (!line) continue;
+    let tok = line.split(/\t|;|,/).map(x => x.trim()).filter(Boolean);
+    if (tok.length < 2) tok = line.split(/\s+/);
+    const i = tok.findIndex(isId);
+    if (i < 0) { skipped.push(line); continue; }
+    const id = tok[i];
+    let name = tok.slice(i + 1).join(' ').trim();
+    if (!name) name = tok.slice(0, i).filter(x => !/^\d{1,3}\.?$/.test(x)).join(' ').trim();
+    if (seen.has(norm(id))) { skipped.push(line + '  (trùng MSSV)'); continue; }
+    seen.add(norm(id));
+    list.push({id, name: name.replace(/\s+/g, ' ')});
+  }
+  return {list, skipped};
+}
+
+function drawQR(canvas, text) {
+  const qr = qrcode(0, 'M'); qr.addData(text); qr.make();
+  const n = qr.getModuleCount(), m = 2, cell = 10, size = (n + m * 2) * cell;
+  canvas.width = canvas.height = size;
+  const g = canvas.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, size, size); g.fillStyle = '#000';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) g.fillRect((c + m) * cell, (r + m) * cell, cell, cell);
+}
+
+/* ======================= TRANG SINH VIÊN ======================= */
+async function studentPage(cid, sid, tok, no) {
+  app.innerHTML = `<div class="stu"><div class="card center"><p class="muted">Đang tải…</p></div></div>`;
+  let cls;
+  try { const d = await withTimeout(classRef(cid).get()); if (!d.exists) throw {message: 'Không tìm thấy lớp.'}; cls = d.data(); }
+  catch (e) { app.innerHTML = `<div class="stu"><div class="card center"><p class="err">Không tải được lớp. Kiểm tra mạng rồi quét lại mã.</p></div></div>`; return; }
+
+  const map = new Map(cls.students.map(s => [norm(s.id), s]));
+  let dev = lsGet('att_dev'); if (!dev) { dev = rnd(12); lsSet('att_dev', dev); }
+  const lockKey = 'att_lock_' + sid;
+  const head = `<h2>${esc(cls.name)}</h2>${no ? `<p class="muted">Buổi ${esc(no)}</p>` : ''}`;
+  const done = (s, ms, again) => {
+    app.innerHTML = `<div class="stu"><div class="card center">${head}<div class="ok">✓</div><h2>${esc(s.name)}</h2><p class="muted">${esc(s.id)} · ${fmtTime(ms)}</p><p>${again ? 'Bạn đã được điểm danh trước đó.' : 'Điểm danh thành công!'}</p></div></div>`;
+  };
+
+  const lock = lsGet(lockKey);
+  if (lock) {
+    const [lid, lms] = lock.split('|'); const s = map.get(norm(lid));
+    if (s) { done(s, +lms, true); return; }
+  }
+
+  app.innerHTML = `<div class="stu"><div class="card center">${head}
+    <label>Nhập mã số sinh viên<input id="m" inputmode="text" autocomplete="off" autocapitalize="characters" value="${esc(lsGet('att_mssv') || '')}"></label>
+    <div class="match" id="who"></div>
+    <button id="go" disabled>Điểm danh</button>
+    <p class="err" id="msg"></p></div></div>`;
+  const inp = $('#m'), who = $('#who'), btn = $('#go'), msg = $('#msg');
+  const check = () => {
+    const s = map.get(norm(inp.value));
+    who.innerHTML = inp.value.trim() ? (s ? '→ ' + esc(s.name) : '<span class="muted">Không có MSSV này trong lớp</span>') : '';
+    btn.disabled = !s; return s;
+  };
+  inp.oninput = check; check(); inp.focus();
+  inp.onkeydown = e => { if (e.key === 'Enter' && !btn.disabled) btn.click(); };
+  btn.onclick = async () => {
+    const s = check(); if (!s) return;
+    btn.disabled = true; btn.textContent = 'Đang gửi…'; msg.textContent = '';
+    const ref = checkCol(cid, sid).doc(s.id);
+    try {
+      await withTimeout(ref.set({mssv: s.id, name: s.name, time: FV.serverTimestamp(), token: tok, device: dev, by: 'qr'}));
+      lsSet('att_mssv', s.id); lsSet(lockKey, s.id + '|' + Date.now());
+      done(s, Date.now(), false);
+    } catch (e) {
+      if (e.code === 'timeout') msg.textContent = 'Mạng yếu, chưa gửi được. Thử lại.';
+      else {
+        try {
+          const d = await ref.get();
+          if (d.exists) { lsSet(lockKey, s.id + '|' + tsMs(d.data().time)); done(s, tsMs(d.data().time), true); return; }
+        } catch (e2) {}
+        msg.textContent = 'Mã QR đã hết hạn hoặc buổi học đã đóng điểm danh. Hãy quét lại mã trên màn hình.';
+      }
+      btn.disabled = false; btn.textContent = 'Điểm danh';
+    }
+  };
+}
+
+/* ======================= GIÁO VIÊN ======================= */
+function loginView(msg) {
+  render(`<div class="card center narrow"><h1>📋 Điểm danh QR</h1><p class="muted">Đăng nhập bằng tài khoản Google của giáo viên.</p>${msg ? `<p class="err">${msg}</p>` : ''}<button id="login">Đăng nhập với Google</button></div>`, {bar: false});
+  $('#login').onclick = async () => {
+    const p = new firebase.auth.GoogleAuthProvider();
+    try { await auth.signInWithPopup(p); }
+    catch (e) { if (/popup/.test(e.code || '')) auth.signInWithRedirect(p); else loginView(esc(e.message)); }
+  };
+}
+
+function home() {
+  render(`<div class="row between"><h1>Lớp học phần</h1><button id="new">+ Lớp mới</button></div><div id="list" class="grid"><p class="muted">Đang tải…</p></div>`);
+  $('#new').onclick = () => go(classForm, null);
+  cleanup.push(db.collection('attClasses').orderBy('createdAt', 'desc').onSnapshot(q => {
+    const el = $('#list'); if (!el) return;
+    el.innerHTML = q.empty ? `<div class="empty" style="grid-column:1/-1">Chưa có lớp nào. Bấm “+ Lớp mới” rồi dán danh sách sinh viên.</div>`
+      : q.docs.map(d => { const c = d.data(); return `<button class="card cls" data-id="${d.id}"><b>${esc(c.name)}</b><span class="muted">${c.students.length} sinh viên · ${c.total} buổi</span></button>`; }).join('');
+    el.querySelectorAll('[data-id]').forEach(b => b.onclick = () => go(classView, b.dataset.id));
+  }, showErr));
+}
+
+async function classForm(cid) {
+  let c = {name: '', total: 15, maxScore: 10, lateMin: 15, lateW: 1, excW: 0, warnPct: 20, round: 0.1, students: []};
+  if (cid) { const d = await classRef(cid).get(); c = {...c, ...d.data()}; }
+  render(`<button class="ghost sm" id="back">← Quay lại</button>
+  <h1>${cid ? 'Sửa lớp' : 'Lớp mới'}</h1>
+  <div class="card form">
+    <label>Tên lớp / học phần<input id="f-name" value="${esc(c.name)}" placeholder="VD: Hóa đại cương 2 – Nhóm 1"></label>
+    <div class="cols">
+      <label>Tổng số buổi (thời lượng)<input id="f-total" type="number" min="1" value="${c.total}"></label>
+      <label>Điểm chuyên cần tối đa<input id="f-max" type="number" min="0" step="0.5" value="${c.maxScore}"></label>
+      <label>Tính là trễ nếu quét sau (phút)<input id="f-late" type="number" min="0" value="${c.lateMin}"></label>
+      <label>Một buổi đi trễ được tính<select id="f-latew">${opt([[1,'Cả buổi'],[0.5,'Nửa buổi'],[0,'Không tính']], c.lateW)}</select></label>
+      <label>Một buổi vắng có phép được tính<select id="f-excw">${opt([[0,'Không tính'],[0.5,'Nửa buổi'],[1,'Cả buổi']], c.excW)}</select></label>
+      <label>Cảnh báo khi vắng quá (%)<input id="f-warn" type="number" min="0" max="100" value="${c.warnPct}"></label>
+      <label>Làm tròn điểm chuyên cần đến<select id="f-round">${opt([[0.1,'0,1'],[0.25,'0,25'],[0.5,'0,5'],[1,'1']], c.round)}</select></label>
+    </div>
+    <label>Danh sách sinh viên <span class="muted">— copy từ Excel và dán vào (mỗi dòng có MSSV và họ tên; cột STT, dòng tiêu đề tự bỏ qua)</span>
+      <textarea id="f-list" rows="12" placeholder="47.01.106.001	Nguyễn Văn An&#10;47.01.106.002	Trần Thị Bình">${esc(c.students.map(s => s.id + '\t' + s.name).join('\n'))}</textarea></label>
+    <p id="f-prev" class="muted"></p>
+    <div class="row end"><button id="save">Lưu lớp</button></div>
+  </div>`);
+  $('#back').onclick = () => cid ? go(classView, cid) : go(home);
+  const prev = () => {
+    const {list, skipped} = parseStudents($('#f-list').value);
+    $('#f-prev').innerHTML = `Nhận được <b>${list.length}</b> sinh viên.` + (skipped.length ? ` Bỏ qua ${skipped.length} dòng: <span class="small">${skipped.slice(0, 4).map(esc).join(' | ')}${skipped.length > 4 ? ' …' : ''}</span>` : '');
+    return list;
+  };
+  $('#f-list').oninput = prev; prev();
+  $('#save').onclick = async () => {
+    const students = prev();
+    const data = {
+      name: $('#f-name').value.trim(), total: +$('#f-total').value, maxScore: +$('#f-max').value,
+      lateMin: +$('#f-late').value, lateW: +$('#f-latew').value, excW: +$('#f-excw').value,
+      warnPct: +$('#f-warn').value, round: +$('#f-round').value, students, ids: students.map(s => s.id)
+    };
+    if (!data.name) return alert('Nhập tên lớp.');
+    if (!(data.total > 0)) return alert('Tổng số buổi phải lớn hơn 0.');
+    if (!students.length) return alert('Chưa có sinh viên nào. Mỗi dòng cần có MSSV (ít nhất 4 chữ số).');
+    $('#save').disabled = true;
+    try {
+      if (cid) { await classRef(cid).update(data); go(classView, cid); }
+      else { const r = await db.collection('attClasses').add({...data, createdAt: FV.serverTimestamp()}); go(classView, r.id); }
+    } catch (e) { $('#save').disabled = false; showErr(e); }
+  };
+}
+
+function classView(cid, tab = 'sessions') {
+  render(`<button class="ghost sm" id="back">← Danh sách lớp</button>
+  <div class="row between wrap"><div><h1 id="c-name">…</h1><p class="muted" id="c-meta"></p></div>
+    <div class="row"><button class="ghost sm" id="edit">Sửa lớp / danh sách</button><button class="ghost sm danger" id="del">Xóa lớp</button></div></div>
+  <nav class="tabs"><button data-tab="sessions">Buổi học</button><button data-tab="summary">Tổng hợp & điểm chuyên cần</button></nav>
+  <div id="tab"></div>`);
+  $('#back').onclick = () => go(home);
+  $('#edit').onclick = () => go(classForm, cid);
+  let cls = null, sessions = null;
+  $('#del').onclick = async () => {
+    if (!cls || !confirm(`Xóa lớp “${cls.name}” và toàn bộ dữ liệu điểm danh? Không thể hoàn tác.`)) return;
+    try {
+      for (const s of sessions || []) { const q = await checkCol(cid, s.id).get(); const b = db.batch(); q.forEach(d => b.delete(d.ref)); b.delete(sessCol(cid).doc(s.id)); await b.commit(); }
+      await classRef(cid).delete(); go(home);
+    } catch (e) { showErr(e); }
+  };
+  const tabs = app.querySelectorAll('[data-tab]');
+  const draw = () => {
+    tabs.forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+    if (!cls || !sessions) return;
+    tab === 'sessions' ? drawSessions() : drawSummary();
+  };
+  tabs.forEach(b => b.onclick = () => { tab = b.dataset.tab; draw(); });
+
+  cleanup.push(classRef(cid).onSnapshot(d => {
+    if (!d.exists) return;
+    const first = !cls; cls = d.data();
+    $('#c-name').textContent = cls.name;
+    $('#c-meta').textContent = `${cls.students.length} sinh viên · ${cls.total} buổi · điểm CC tối đa ${numVN(cls.maxScore)}`;
+    if (tab === 'sessions' || first) draw();
+  }, showErr));
+  cleanup.push(sessCol(cid).orderBy('no').onSnapshot(q => {
+    const first = !sessions;
+    sessions = q.docs.map(d => ({id: d.id, ...d.data({serverTimestamps: 'estimate'})}));
+    if (tab === 'sessions' || first) draw();
+  }, showErr));
+
+  function drawSessions() {
+    const el = $('#tab'); if (!el) return;
+    const next = sessions.reduce((m, s) => Math.max(m, s.no || 0), 0) + 1;
+    el.innerHTML = `<div class="row between wrap" style="margin-bottom:12px"><p class="muted">Đã học ${sessions.length}/${cls.total} buổi</p>
+      <button id="start">▶ Bắt đầu điểm danh buổi ${next}</button></div>` +
+      (sessions.length ? `<div class="list">${sessions.slice().reverse().map(s => `<div class="item">
+        <div><b>Buổi ${s.no}</b> <span class="muted">· ${fmtDate(s.date)}</span>${s.open ? '<span class="tag c">Đang mở</span>' : ''}</div>
+        <div class="row"><button class="sm" data-open="${s.id}">${s.open ? 'Màn hình QR' : 'Xem / sửa'}</button><button class="ghost sm danger" data-del="${s.id}">Xóa</button></div></div>`).join('')}</div>`
+      : `<div class="empty">Chưa có buổi nào. Đầu giờ, bấm “Bắt đầu điểm danh” và chiếu mã QR lên màn hình.</div>`);
+    $('#start').onclick = async () => {
+      $('#start').disabled = true;
+      try {
+        const ref = sessCol(cid).doc();
+        await ref.set({no: next, date: today(), startAt: FV.serverTimestamp(), open: true, tokens: [rnd(8)], tokenAt: FV.serverTimestamp()});
+        go(sessionView, cid, ref.id);
+      } catch (e) { $('#start').disabled = false; showErr(e); }
+    };
+    el.querySelectorAll('[data-open]').forEach(b => b.onclick = () => go(sessionView, cid, b.dataset.open));
+    el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+      const s = sessions.find(x => x.id === b.dataset.del);
+      if (!confirm(`Xóa buổi ${s.no} và dữ liệu điểm danh của buổi này?`)) return;
+      try { const q = await checkCol(cid, s.id).get(); const bt = db.batch(); q.forEach(d => bt.delete(d.ref)); bt.delete(sessCol(cid).doc(s.id)); await bt.commit(); }
+      catch (e) { showErr(e); }
+    });
+  }
+
+  async function drawSummary() {
+    const el = $('#tab'); if (!el) return;
+    el.innerHTML = `<p class="muted">Đang tổng hợp…</p>`;
+    const ss = sessions.slice().sort((a, b) => a.no - b.no);
+    let maps;
+    try {
+      const all = await Promise.all(ss.map(s => checkCol(cid, s.id).get()));
+      maps = all.map(q => { const m = new Map(); q.forEach(d => m.set(d.id, d.data({serverTimestamps: 'estimate'}))); return m; });
+    } catch (e) { el.innerHTML = `<p class="err">Không tải được dữ liệu: ${esc(e.message)}</p>`; return; }
+    if (tab !== 'summary') return;
+
+    const step = cls.round || 0.1;
+    const rows = cls.students.map(st => {
+      const codes = ss.map((s, j) => statusOf(maps[j].get(st.id), tsMs(s.startAt), cls.lateMin));
+      const k = {C: 0, T: 0, P: 0, V: 0}; codes.forEach(c => k[c]++);
+      const units = k.C + k.T * cls.lateW + k.P * cls.excW;
+      // Cứ ${total} buổi đủ thì được ${maxScore} điểm → ${units} buổi được units × maxScore : total
+      let score = Math.round((units * cls.maxScore / cls.total) / step) * step;
+      score = Math.min(cls.maxScore, +score.toFixed(2));
+      const absPct = (k.V + k.P) * 100 / cls.total;
+      return {...st, codes, k, score, absPct, warn: absPct > cls.warnPct};
+    });
+    // điện thoại dùng điểm danh cho nhiều MSSV trong cùng buổi
+    const dups = [];
+    ss.forEach((s, j) => {
+      const byDev = new Map();
+      maps[j].forEach(c => { if (c.by === 'qr' && c.device) { if (!byDev.has(c.device)) byDev.set(c.device, []); byDev.get(c.device).push(c.name || c.mssv); } });
+      byDev.forEach(names => { if (names.length > 1) dups.push(`Buổi ${s.no}: một điện thoại điểm danh cho ${names.map(esc).join(', ')}`); });
+    });
+    const nWarn = rows.filter(r => r.warn).length;
+
+    el.innerHTML = `<div class="row between wrap"><p class="muted">Đã học ${ss.length}/${cls.total} buổi${nWarn ? ` · <span class="err">${nWarn} SV vắng quá ${cls.warnPct}%</span>` : ''}</p>
+      <div class="row"><button class="ghost sm" id="refresh">↻ Làm mới</button><button class="sm" id="xls">⬇ Xuất Excel</button></div></div>
+      <div class="legend"><span><span class="tag c">✓</span> Có mặt</span><span><span class="tag t">T</span> Trễ</span><span><span class="tag p">P</span> Có phép</span><span><span class="tag v">V</span> Vắng</span>
+      <span class="muted">Điểm CC = ${numVN(cls.maxScore)} × (số buổi có mặt${cls.lateW ? '' : ' đúng giờ'}${cls.excW ? ' + có phép × ' + numVN(cls.excW) : ''}${cls.lateW && cls.lateW !== 1 ? ' + trễ × ' + numVN(cls.lateW) : ''}) : ${cls.total}</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th class="name">Họ và tên</th><th>MSSV</th>${ss.map(s => `<th title="${fmtDate(s.date)}">B${s.no}</th>`).join('')}<th>Có mặt</th><th>Trễ</th><th>P</th><th>V</th><th>% vắng</th><th>Điểm CC</th></tr></thead>
+      <tbody>${rows.map((r, i) => `<tr class="${r.warn ? 'warn' : ''}"><td>${i + 1}</td><td class="name">${esc(r.name)}</td><td>${esc(r.id)}</td>${r.codes.map(c => `<td class="k-${c}">${c === 'C' ? '✓' : c}</td>`).join('')}<td>${r.k.C + r.k.T}</td><td>${r.k.T || ''}</td><td>${r.k.P || ''}</td><td>${r.k.V || ''}</td><td>${numVN(r.absPct.toFixed(1))}%</td><td><b>${numVN(r.score)}</b></td></tr>`).join('')}</tbody></table></div>
+      ${dups.length ? `<div class="note">⚠ Nghi điểm danh hộ:<br>${dups.join('<br>')}</div>` : ''}`;
+    $('#refresh').onclick = drawSummary;
+    $('#xls').onclick = () => {
+      const head = ['STT', 'MSSV', 'Họ và tên', ...ss.map(s => `B${s.no} (${fmtDate(s.date)})`), 'Số buổi có mặt', 'Trễ', 'Có phép', 'Vắng', '% vắng', 'Điểm chuyên cần'];
+      const sym = {C: 'x', T: 'T', P: 'P', V: 'V'};
+      const aoa = [[cls.name], [`Tổng số buổi: ${cls.total} · Đã học: ${ss.length} · Điểm chuyên cần tối đa: ${cls.maxScore}`],
+        ['Ký hiệu: x = có mặt, T = đi trễ, P = vắng có phép, V = vắng'], [], head,
+        ...rows.map((r, i) => [i + 1, r.id, r.name, ...r.codes.map(c => sym[c]), r.k.C + r.k.T, r.k.T, r.k.P, r.k.V, +r.absPct.toFixed(1), r.score])];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [{wch: 5}, {wch: 16}, {wch: 26}, ...ss.map(() => ({wch: 8})), {wch: 14}, {wch: 6}, {wch: 8}, {wch: 6}, {wch: 8}, {wch: 14}];
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Điểm danh');
+      XLSX.writeFile(wb, 'DiemDanh_' + cls.name.replace(/[\\/:*?"<>|]+/g, '_') + '.xlsx');
+    };
+  }
+}
+
+async function sessionView(cid, sid) {
+  let cls;
+  try { cls = (await classRef(cid).get()).data(); } catch (e) { showErr(e); return; }
+  render(`<div class="row between wrap"><button class="ghost sm" id="back">← ${esc(cls.name)}</button>
+    <div class="row"><button class="ghost sm" id="fs">⛶ Chiếu toàn màn hình</button><button class="sm" id="toggle">…</button></div></div>
+    <div class="sess-grid">
+      <section class="card qrbox"><h2 id="s-title"></h2>
+        <div id="qrwrap"><canvas id="qr"></canvas><div id="closed" class="closed hidden">Đã đóng điểm danh</div></div>
+        <div class="bar"><i id="bar"></i></div>
+        <p class="muted small">Mở camera điện thoại để quét · mã tự đổi mỗi ${ROTATE_SEC} giây</p>
+        <div class="big"><b id="cnt">0</b> <span>/ ${cls.students.length} có mặt</span></div>
+      </section>
+      <section class="card side">
+        <h3 style="margin-top:0">Đã điểm danh <span id="n-in" class="muted"></span></h3><div id="in" class="list"></div>
+        <h3>Chưa điểm danh <span id="n-out" class="muted"></span></h3>
+        <input id="q" placeholder="Tìm tên hoặc MSSV…" style="margin-bottom:8px"><div id="out" class="list"></div>
+      </section>
+    </div>`);
+  const sref = sessCol(cid).doc(sid);
+  let sess = null, checks = new Map(), timer = null;
+  const url = t => location.origin + location.pathname + `?c=${cid}&s=${sid}&n=${sess.no}&t=${t}`;
+  const showQR = t => {
+    drawQR($('#qr'), url(t));
+    const b = $('#bar'); b.style.animation = 'none'; void b.offsetWidth; b.style.animation = `drain ${ROTATE_SEC}s linear forwards`;
+  };
+  const rotate = async () => {
+    const t = rnd(8);
+    try { await sref.update({tokens: [t, ...(sess.tokens || [])].slice(0, KEEP_TOKENS), tokenAt: FV.serverTimestamp()}); showQR(t); }
+    catch (e) { console.warn(e); }
+  };
+  const startRotate = () => { if (timer) return; rotate(); timer = setInterval(rotate, ROTATE_SEC * 1000); };
+  const stopRotate = () => { clearInterval(timer); timer = null; const b = $('#bar'); if (b) b.style.animation = 'none'; };
+  cleanup.push(stopRotate);
+
+  $('#back').onclick = () => go(classView, cid);
+  $('#fs').onclick = () => {
+    const on = document.body.classList.toggle('present');
+    try { on ? document.documentElement.requestFullscreen?.() : (document.fullscreenElement && document.exitFullscreen()); } catch (e) {}
+  };
+  cleanup.push(() => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); });
+  $('#toggle').onclick = async () => {
+    try {
+      if (sess.open) { if (confirm('Đóng điểm danh buổi này? Sinh viên sẽ không quét được nữa.')) await sref.update({open: false, closedAt: FV.serverTimestamp()}); }
+      else await sref.update({open: true, tokens: [rnd(8)], tokenAt: FV.serverTimestamp()});
+    } catch (e) { showErr(e); }
+  };
+  $('#q').oninput = () => drawLists();
+
+  cleanup.push(sref.onSnapshot(d => {
+    if (!d.exists) { go(classView, cid); return; }
+    sess = d.data({serverTimestamps: 'estimate'});
+    $('#s-title').textContent = `Buổi ${sess.no} · ${fmtDate(sess.date)}`;
+    $('#toggle').textContent = sess.open ? '■ Đóng điểm danh' : '▶ Mở lại điểm danh';
+    $('#closed').classList.toggle('hidden', !!sess.open);
+    if (sess.open) startRotate();
+    else { stopRotate(); if (sess.tokens) drawQR($('#qr'), url(sess.tokens[0])); }
+    drawLists();
+  }, showErr));
+  cleanup.push(checkCol(cid, sid).onSnapshot(q => {
+    checks = new Map(); q.forEach(d => checks.set(d.id, d.data({serverTimestamps: 'estimate'})));
+    drawLists();
+  }, showErr));
+
+  async function setStatus(s, st) {
+    const ref = checkCol(cid, sid).doc(s.id);
+    try {
+      if (checks.has(s.id)) await ref.update({status: st});
+      else await ref.set({mssv: s.id, name: s.name, by: 'gv', status: st, time: FV.serverTimestamp()});
+    } catch (e) { showErr(e); }
+  }
+
+  function drawLists() {
+    if (!sess || !$('#in')) return;
+    const startMs = tsMs(sess.startAt);
+    const stOf = s => statusOf(checks.get(s.id), startMs, cls.lateMin);
+    const devMap = new Map();
+    checks.forEach(c => { if (c.by === 'qr' && c.device) devMap.set(c.device, (devMap.get(c.device) || 0) + 1); });
+    const inL = cls.students.filter(s => checks.has(s.id) && stOf(s) !== 'V').sort((a, b) => tsMs(checks.get(b.id).time) - tsMs(checks.get(a.id).time));
+    const q = norm($('#q').value);
+    const outAll = cls.students.filter(s => !checks.has(s.id) || stOf(s) === 'V');
+    const outL = outAll.filter(s => !q || norm(s.name).includes(q) || norm(s.id).includes(q));
+    $('#cnt').textContent = inL.filter(s => ['C', 'T'].includes(stOf(s))).length;
+    $('#n-in').textContent = `(${inL.length})`; $('#n-out').textContent = `(${outAll.length})`;
+    $('#in').innerHTML = inL.map(s => {
+      const c = checks.get(s.id), st = stOf(s), dup = c.by === 'qr' && devMap.get(c.device) > 1;
+      return `<div class="item"><div><b>${esc(s.name)}</b>${st !== 'C' ? `<span class="tag ${st.toLowerCase()}">${ST[st]}</span>` : ''}${dup ? '<span class="tag v" title="Cùng một điện thoại đã điểm danh cho nhiều MSSV">⚠ trùng máy</span>' : ''}<br><span class="muted">${esc(s.id)} · ${fmtTime(tsMs(c.time))}${c.by === 'gv' ? ' · GV ghi' : ''}</span></div>
+        <select data-st="${esc(s.id)}">${Object.entries(ST).map(([k, t]) => `<option value="${k}" ${k === st ? 'selected' : ''}>${t}</option>`).join('')}</select></div>`;
+    }).join('') || '<p class="muted small">Chưa có ai.</p>';
+    $('#out').innerHTML = outL.map(s => `<div class="item"><div><b>${esc(s.name)}</b><br><span class="muted">${esc(s.id)}</span></div>
+      <div class="row"><button class="ghost sm" data-mk="C" data-id="${esc(s.id)}">Có mặt</button><button class="ghost sm" data-mk="P" data-id="${esc(s.id)}">Có phép</button></div></div>`).join('')
+      || `<p class="muted small">${outAll.length ? 'Không tìm thấy.' : 'Đủ cả lớp 🎉'}</p>`;
+    const byId = id => cls.students.find(x => x.id === id);
+    $('#in').querySelectorAll('[data-st]').forEach(sel => sel.onchange = () => setStatus(byId(sel.dataset.st), sel.value));
+    $('#out').querySelectorAll('[data-mk]').forEach(b => b.onclick = () => setStatus(byId(b.dataset.id), b.dataset.mk));
+  }
+}
+
+function setupView() {
+  app.innerHTML = `<main><div class="card setup narrow" style="max-width:640px"><h1>Cần cấu hình Firebase</h1>
+    <p>Mở file <code>index.html</code>, tìm khối <code>firebaseConfig</code> ở đầu phần script và dán cấu hình project Firebase của thầy vào, rồi sửa <code>TEACHER_EMAIL</code> thành email Google của thầy.</p></div></main>`;
+}
+
+/* ======================= KHỞI ĐỘNG ======================= */
+if (firebaseConfig.apiKey === 'DAN_VAO_DAY') setupView();
+else {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  FV = firebase.firestore.FieldValue;
+  const c = params.get('c'), s = params.get('s'), t = params.get('t');
+  if (c && s && t) studentPage(c, s, t, params.get('n'));
+  else {
+    auth = firebase.auth();
+    auth.getRedirectResult().catch(e => console.warn(e));
+    auth.onAuthStateChanged(u => {
+      if (!u) go(loginView);
+      else if ((u.email || '').toLowerCase() !== TEACHER_EMAIL.toLowerCase()) { const m = `Tài khoản ${esc(u.email)} không phải tài khoản giáo viên.`; auth.signOut().then(() => go(loginView, m)); }
+      else go(home);
+    });
+  }
+}
+</script>
+</body>
+</html>
